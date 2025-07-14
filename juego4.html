@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<link rel="shortcut icon" href="../archivos/favicon.ico">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sopa de Letras</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8em;
+    }
+
+    #timer {
+      margin: 10px 0;
+    }
+
+    #gameArea {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+    }
+
+    #grid {
+      border-collapse: collapse;
+      touch-action: none;
+    }
+
+    #grid td {
+      width: 8vw;
+      height: 8vw;
+      max-width: 40px;
+      max-height: 40px;
+      text-align: center;
+      border: 1px solid #666;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 4vw;
+      color: white;
+      user-select: none;
+    }
+
+    td.selected {
+      background-color: orange;
+    }
+
+    td.found {
+      background-color: green;
+      color: black;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 0;
+      text-align: center;
+    }
+
+    li.found {
+      text-decoration: line-through;
+      color: #0f0;
+    }
+
+    #sideArea {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #message {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #0f0;
+      text-align: center;
+    }
+
+    #restartBtn {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background: #ff6600;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    @media (min-width: 768px) {
+      #gameArea {
+        flex-direction: row;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      #grid td {
+        width: 30px;
+        height: 30px;
+        font-size: 18px;
+      }
+
+      ul {
+        text-align: left;
+        margin-left: 20px;
+      }
+
+      #sideArea {
+        align-items: flex-start;
+        margin-left: 20px;
+      }
+
+      #message, #restartBtn {
+        text-align: left;
+        margin-top: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Sopa de Letras</h1>
+<div id="timer">Tiempo: 0s</div>
+
+<div id="gameArea">
+  <table id="grid"></table>
+  <div id="sideArea">
+    <ul id="wordList"></ul>
+    <div id="message"></div>
+    <button id="restartBtn" onclick="initGame()" style="display:none;">Reiniciar</button>
+  </div>
+</div>
+
+<!-- Sonidos -->
+<audio id="victorySound" src="../archivos/ghostpiano.mp3"></audio>
+
+<script>
+const words = ["PEPITO", "REMEDITOS", "JOSEANGEL", "DOMINGO", "JUANCARLOS", "ABEL", "DIANA", "VANESA", "SANDRA", "INMA", "CUQUI"];
+const gridSize = 12;
+let grid = [], foundWords = new Set(), timer = 0, interval;
+let selecting = false, startCell = null, selectedCells = [];
+
+function initGame() {
+  foundWords.clear();
+  timer = 0;
+  document.getElementById("message").textContent = "";
+  document.getElementById("restartBtn").style.display = "none";
+
+  clearInterval(interval);
+  interval = setInterval(() => {
+    timer++;
+    document.getElementById("timer").textContent = `Tiempo: ${timer}s`;
+  }, 1000);
+
+  grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(""));
+  placeWords();
+  fillEmpty();
+  drawGrid();
+  drawWordList();
+}
+
+const directions = [[0, 1], [1, 0], [1, 1], [-1, 1]];
+
+function placeWords() {
+  for (let word of words) {
+    let placed = false;
+    while (!placed) {
+      let dir = directions[Math.floor(Math.random() * directions.length)];
+      let r = Math.floor(Math.random() * gridSize);
+      let c = Math.floor(Math.random() * gridSize);
+      if (canPlace(word, r, c, dir)) {
+        for (let i = 0; i < word.length; i++) {
+          grid[r + i * dir[0]][c + i * dir[1]] = word[i];
+        }
+        placed = true;
+      }
+    }
+  }
+}
+
+function canPlace(word, r, c, dir) {
+  for (let i = 0; i < word.length; i++) {
+    let nr = r + i * dir[0];
+    let nc = c + i * dir[1];
+    if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize) return false;
+    if (grid[nr][nc] !== "" && grid[nr][nc] !== word[i]) return false;
+  }
+  return true;
+}
+
+function fillEmpty() {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      if (grid[r][c] === "") {
+        grid[r][c] = letters[Math.floor(Math.random() * letters.length)];
+      }
+    }
+  }
+}
+
+function drawGrid() {
+  const table = document.getElementById("grid");
+  table.innerHTML = "";
+  for (let r = 0; r < gridSize; r++) {
+    const row = document.createElement("tr");
+    for (let c = 0; c < gridSize; c++) {
+      const cell = document.createElement("td");
+      cell.textContent = grid[r][c];
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      row.appendChild(cell);
+    }
+    table.appendChild(row);
+  }
+
+  table.addEventListener("pointerdown", e => {
+    if (e.target.tagName !== "TD") return;
+    selecting = true;
+    startCell = e.target;
+    clearSelection();
+    e.target.classList.add("selected");
+    selectedCells = [e.target];
+  });
+
+  table.addEventListener("pointermove", e => {
+    if (!selecting || e.target.tagName !== "TD") return;
+    clearSelection();
+    selectedCells = getCellsInLine(startCell, e.target);
+    selectedCells.forEach(cell => cell.classList.add("selected"));
+  });
+
+  document.addEventListener("pointerup", () => {
+    if (!selecting) return;
+    selecting = false;
+    let word = selectedCells.map(c => c.textContent).join("");
+    let reversed = word.split("").reverse().join("");
+    let found = words.find(w => w === word || w === reversed);
+    if (found && !foundWords.has(found)) {
+      selectedCells.forEach(c => c.classList.add("found"));
+      document.getElementById("word-" + found).classList.add("found");
+      foundWords.add(found);
+      if (foundWords.size === words.length) {
+        clearInterval(interval);
+        document.getElementById("message").textContent = `¡Has ganado en ${timer} segundos!`;
+        document.getElementById("restartBtn").style.display = "inline-block";
+        document.getElementById("victorySound").play();
+      }
+    } else {
+      clearSelection();
+    }
+  });
+}
+
+function getCellsInLine(start, end) {
+  const r1 = parseInt(start.dataset.row);
+  const c1 = parseInt(start.dataset.col);
+  const r2 = parseInt(end.dataset.row);
+  const c2 = parseInt(end.dataset.col);
+  const dr = r2 - r1, dc = c2 - c1;
+  const steps = Math.max(Math.abs(dr), Math.abs(dc));
+  const dRow = dr === 0 ? 0 : dr / Math.abs(dr);
+  const dCol = dc === 0 ? 0 : dc / Math.abs(dc);
+  if (!(dRow === 0 || dCol === 0 || Math.abs(dr) === Math.abs(dc))) return [];
+  const cells = [];
+  for (let i = 0; i <= steps; i++) {
+    const cell = document.querySelector(`td[data-row="${r1 + i * dRow}"][data-col="${c1 + i * dCol}"]`);
+    if (cell) cells.push(cell);
+  }
+  return cells;
+}
+
+function clearSelection() {
+  document.querySelectorAll("td.selected").forEach(td => td.classList.remove("selected"));
+  selectedCells = [];
+}
+
+function drawWordList() {
+  const ul = document.getElementById("wordList");
+  ul.innerHTML = "";
+  for (let word of words) {
+    const li = document.createElement("li");
+    li.textContent = word;
+    li.id = "word-" + word;
+    ul.appendChild(li);
+  }
+}
+
+initGame();
+</script>
+
+<br>
+
+<center>
+	<a href="index.html">
+  <button>Volver a Pasatiempos</button>
+</a>
+	</center>
+</body>
+</html>
