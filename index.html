@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido GBUE</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .option-box {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            text-decoration: none;
+            color: #fff;
+            font-size: 1.5em;
+            font-weight: bold;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        .option-box:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* Responsive para Tablets */
+        @media (min-width: 600px) {
+            .container {
+                flex-direction: row;
+                justify-content: center;
+            }
+            .option-box {
+                flex: 1;
+                font-size: 1.8em;
+            }
+        }
+
+        /* Responsive para PC */
+        @media (min-width: 992px) {
+            .option-box {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index2.html" class="option-box fullscreen-link">
+            Pruebas
+        </a>
+        <a href="index3.html" class="option-box fullscreen-link">
+            Ghostbusters
+        </a>
+    </div>
+
+    <script>
+        document.querySelectorAll('.fullscreen-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetUrl = this.href;
+
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.mozRequestFullScreen) { /* Firefox */
+                    document.documentElement.mozRequestFullScreen();
+                } else if (document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) { /* IE/Edge */
+                    document.documentElement.msRequestFullscreen();
+                }
+                
+                setTimeout(() => {
+                    window.location.href = targetUrl;
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
