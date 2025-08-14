@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<link rel="shortcut icon" href="img/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUIZ Ghostbusters</title>
+    <style>
+        /* Fondo animado de gradiente */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #7FFF00, #32CD32, #006400); /* Colores verdes */
+            background-size: 100% 200%; /* Tamaño expandido para movimiento */
+            animation: gradient-cycle 6s ease-in-out infinite; /* Movimiento cíclico */
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        /* Animación cíclica del gradiente */
+        @keyframes gradient-cycle {
+            0% {
+                background-position: 0 0; /* Comienza desde la parte superior */
+            }
+            50% {
+                background-position: 0 100%; /* Se mueve hacia abajo */
+            }
+            100% {
+                background-position: 0 0; /* Regresa hacia arriba */
+            }
+        }
+
+        /* Contenedor principal del juego */
+        #quiz-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        #question-text {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .answer-btn {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #32CD32; /* Botón verde */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .answer-btn:hover {
+            background-color: #228B22; /* Verde más oscuro al pasar el ratón */
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Contenedor del juego -->
+    <div id="quiz-container">
+        <p id="question-text"></p>
+        <div id="answers">
+            <button class="answer-btn" onclick="checkAnswer(0)">Opción 1</button>
+            <button class="answer-btn" onclick="checkAnswer(1)">Opción 2</button>
+            <button class="answer-btn" onclick="checkAnswer(2)">Opción 3</button>
+        </div>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        // Preguntas y lógica del juego
+        const questions = [
+            { question: "¿Cómo se llama el personaje interpretado por Bill Murray?", answers: ["Ray Stantz", "Peter Venkman", "Egon Spengler"], correct: 1 },
+            { question: "¿Cuál es la frase icónica del anuncio de los Cazafantasmas?", answers: ["¿A quién vas a llamar?", "No cruce los rayos", "¿Quién tiene un problema?"], correct: 0 },
+            { question: "¿Qué forma adopta el Destructor?", answers: ["Un coche", "Un monstruo gigante", "El Hombre de Malvavisco (Stay Puft)"], correct: 2 },
+            { question: "¿En qué ciudad se desarrolla la película?", answers: ["Chicago", "Nueva York", "Los Ángeles"], correct: 1 },
+            { question: "¿Qué dispositivo utilizan los Cazafantasmas para atrapar fantasmas?", answers: ["Proton Packs", "Ghost Detectors", "Magic Traps"], correct: 0 },
+            { question: "¿Quién es el antagonista principal de la película?", answers: ["Gozer", "Slimer", "Zuul"], correct: 0 },
+            { question: "¿Qué trabajo tenía Dana Barrett (personaje de Sigourney Weaver) antes de enfrentarse a lo sobrenatural?", answers: ["Música", "Escritora", "Artista"], correct: 0 },
+            { question: "¿Qué comía Slimer cuando fue capturado por primera vez?", answers: ["Pollo frito", "Pizza", "Hot dogs"], correct: 2 },
+            { question: "¿Qué frase dicen los Cazafantasmas acerca de los rayos de protones?", answers: ["Úsalo con cuidado", "No cruce los rayos", "Sujétalo con fuerza"], correct: 1 },
+            { question: "¿Cómo se llama el edificio donde ocurre la batalla final contra Gozer?", answers: ["Edificio Shandor", "Edificio Empire", "Edificio Central"], correct: 0 },
+            { question: "¿Qué nombre le dan los Cazafantasmas al fantasma verde que aparece en el hotel?", answers: ["Slimy", "Slimer", "Squeaky"], correct: 1 },
+            { question: "¿Qué licencia necesitan los Cazafantasmas para operar legalmente?", answers: ["Licencia de exterminadores", "Licencia paranormal", "Licencia de caza"], correct: 0 },
+            { question: "¿Cuál era el eslogan del alcalde al aprobar a los Cazafantasmas?", answers: ["Salvar la ciudad", "Dejen que trabajen", "No hay problema"], correct: 1 },
+            { question: "¿Qué elemento sobrenatural se utiliza para cerrar la puerta dimensional?", answers: ["Rayo cruzado", "Cristales mágicos", "Una explosión"], correct: 0 },
+            { question: "¿Qué relación tiene Zuul con Gozer?", answers: ["Es su sirviente", "Es su maestro", "Es su hermano"], correct: 0 },
+            { question: "¿Cuál era el número de teléfono que aparecía en el anuncio de los Cazafantasmas?", answers: ["555-2368", "555-1984", "555-2020"], correct: 0 },
+            { question: "¿Qué dice Egon que nunca debe hacer con los rayos de protones?", answers: ["Apuntarlos al suelo", "Cruzarlos", "Desactivarlos rápido"], correct: 1 },
+            { question: "¿De qué material es el detector de energía paranormal que utiliza Egon?", answers: ["Plástico reciclado", "Metal", "Piezas de un juguete"], correct: 2 },
+            { question: "¿Cómo describe Ray Stantz el estado del ectoplasma en el hotel?", answers: ["Como pegajoso", "Como estable", "Como denso"], correct: 0 },
+            { question: "¿Cuál es la conexión histórica del Edificio Shandor con Gozer?", answers: ["Fue construido por adoradores de Gozer", "Fue usado como una prisión mágica", "Era un templo en el pasado"], correct: 0 }
+        ];
+
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+        let canAnswer = true;
+
+        // Barajar respuestas
+        function shuffleAnswers(question) {
+            const answers = question.answers.map((answer, index) => ({ text: answer, index: index }));
+            const shuffled = answers.sort(() => Math.random() - 0.5);
+            question.answers = shuffled.map(a => a.text);
+            question.correct = shuffled.findIndex(a => a.index === question.correct);
+        }
+
+        // Cargar preguntas
+        function loadQuestion() {
+            if (currentQuestion >= questions.length) {
+                showFinalScore();
+                return;
+            }
+
+            const question = questions[currentQuestion];
+            shuffleAnswers(question);
+
+            document.getElementById("question-text").innerText = question.question;
+
+            const buttons = document.querySelectorAll(".answer-btn");
+            buttons.forEach((btn, index) => {
+                btn.innerText = question.answers[index];
+            });
+
+            canAnswer = true;
+            document.getElementById("result").innerText = "";
+        }
+
+        // Comprobar respuesta
+        function checkAnswer(selected) {
+            if (!canAnswer) return;
+
+            const question = questions[currentQuestion];
+            if (selected === question.correct) {
+                correctAnswers++;
+            }
+
+            canAnswer = false;
+
+            setTimeout(() => {
+                currentQuestion++;
+                loadQuestion();
+            }, 200);
+        }
+
+        // Mostrar resultado final
+        function showFinalScore() {
+            document.getElementById("quiz-container").innerHTML = `
+                <h1>Resultados</h1>
+                <p>You got ${correctAnswers} out of  ${questions.length} questions right!</p>
+                <button onclick="restartGame()">Play again?</button>
+            `;
+        }
+
+        // Reiniciar juego
+        function restartGame() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            document.getElementById("quiz-container").innerHTML = `
+                <p id="question-text"></p>
+                <div id="answers">
+                    <button class="answer-btn" onclick="checkAnswer(0)">Opción 1</button>
+                    <button class="answer-btn" onclick="checkAnswer(1)">Opción 2</button>
+                    <button class="answer-btn" onclick="checkAnswer(2)">Opción 3</button>
+                </div>
+                <p id="result"></p>
+            `;
+            loadQuestion();
+        }
+
+        // Inicializar juego
+        loadQuestion();
+    </script>
+	<center>
+	<a href="../pasatiempos-en.html">
+  <button>Back to Games</button>
+</a>
+	</center>
+</body>
+</html>

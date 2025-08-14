@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zener Cards</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      background: #000;
+      background: linear-gradient(120deg, #000 0%, #000 20%, #002200 40%, #004400 60%, #002200 80%, #000 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 20s ease infinite;
+      font-family: sans-serif;
+      color: #fff;
+      text-align: center;
+    }
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    #startScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+    }
+    #startBtn {
+      max-width: 300px;
+      width: 70%;
+      cursor: pointer;
+      user-select: none;
+    }
+    #startBtn:active { opacity: 0.8; }
+
+    #videoContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    #videoContainer video {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    #game {
+      display: none;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1em;
+      position: relative;
+      z-index: 10;
+    }
+    h1 { margin: 0.5em 0; }
+
+    #drawBtn {
+      display: none;
+      margin-top: 1em;
+      padding: 0.7em 1.5em;
+      font-size: 1.1em;
+      cursor: pointer;
+      background: #0a84ff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      user-select: none;
+    }
+    #drawBtn:active { background: #0063c1; }
+    #drawBtn[disabled] {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    #mainCard {
+      margin: 4em auto 1em;
+      width: 150px;
+      height: 150px;
+      perspective: 1000px;
+      display: none;
+    }
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+    }
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-front,
+    .card-back {
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-front {
+      transform: rotateY(180deg);
+    }
+
+    .cards {
+      display: none;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 6em;
+    }
+    .cards img {
+      width: 60px;
+      margin: 0.5em;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .cards img:hover {
+      transform: scale(1.2);
+    }
+
+    #hitMessage {
+      display: none;
+      position: fixed;
+      top: 15%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2em;
+      color: #00ff00;
+      text-shadow: 1px 1px 4px #00aa00;
+      z-index: 40;
+    }
+
+    .result {
+      font-size: 1.5em;
+      margin-top: 1.5em;
+    }
+
+    #zenerImg {
+      display: none;
+      max-width: 200px;
+      width: 50%;
+      margin: 1em auto;
+    }
+
+    #restartBtn {
+      display: none;
+      margin-top: 1.5em;
+      padding: 0.7em 1.5em;
+      font-size: 1.1em;
+      cursor: pointer;
+      background: #ff0;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      animation: pulse 1.5s infinite, glow 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px #ff0; }
+      50% { box-shadow: 0 0 20px #ff0, 0 0 10px #fff; }
+      100% { box-shadow: 0 0 5px #ff0; }
+    }
+
+    @media (max-width: 600px) {
+      .cards img { width: 45px; }
+      #mainCard {
+        margin: 3em auto 1em;
+        width: 100px;
+        height: 100px;
+      }
+      #zenerImg,
+      #startBtn { max-width: 150px; }
+      #hitMessage { font-size: 1.5em; }
+    }
+
+    #celebration {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 5;
+      display: none;
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: hsl(var(--hue), 70%, 60%);
+      animation: fall 3s linear infinite;
+      opacity: 0.8;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-10px) rotate(0deg); }
+      100% { transform: translateY(110vh) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="startScreen">
+    <img id="startBtn" src="img/zener.png" alt="Empezar"/>
+  </div>
+
+  <div id="videoContainer">
+    <video id="videoPlayer" autoplay muted playsinline></video>
+  </div>
+
+  <div id="game">
+    <h1 id="title">Think of a Zener card</h1>
+    <img id="zenerImg" src="img/zener.png" alt="Zener" />
+    <button id="drawBtn">Draw card</button>
+
+    <div id="mainCard" class="card">
+      <div class="card-inner">
+        <img class="card-back" src="img/trasera.png" alt="Reverso de la carta"/>
+        <img class="card-front" id="revealedCard" src="" alt="Carta revelada"/>
+      </div>
+    </div>
+
+    <div id="hitMessage">You guessed it!</div>
+    <div class="cards" id="choices"></div>
+    <div class="result" id="result"></div>
+    <button id="restartBtn">Play again</button>
+  </div>
+
+  <div id="celebration"></div>
+
+  <script>
+    const totalRounds = 5;
+    let currentRound = 1;
+    let score = 0;
+    let userChoice = null;
+    let userInteracted = false;
+    let holdTimer = null;
+
+    const cards = ['carta1.png', 'carta2.png', 'carta3.png', 'carta4.png', 'carta5.png'];
+
+    const startScreen = document.getElementById('startScreen');
+    const startBtn = document.getElementById('startBtn');
+    const videoContainer = document.getElementById('videoContainer');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const gameDiv = document.getElementById('game');
+    const titleH1 = document.getElementById('title');
+    const zenerImg = document.getElementById('zenerImg');
+    const drawBtn = document.getElementById('drawBtn');
+    const choicesDiv = document.getElementById('choices');
+    const hitMessage = document.getElementById('hitMessage');
+    const resultDiv = document.getElementById('result');
+    const revealedCard = document.getElementById('revealedCard');
+    const cardContainer = document.getElementById('mainCard');
+    const restartBtn = document.getElementById('restartBtn');
+    const celebrationDiv = document.getElementById('celebration');
+
+    function showVideo(path, callback) {
+      gameDiv.style.display = 'none';
+      videoContainer.style.display = 'flex';
+      videoPlayer.muted = !userInteracted;
+      videoPlayer.src = `videos/${path}`;
+      videoPlayer.onended = () => {
+        videoContainer.style.display = 'none';
+        gameDiv.style.display = 'block';
+        if (callback) callback();
+      };
+      videoPlayer.load();
+      videoPlayer.play().catch(() => {
+        videoContainer.style.display = 'none';
+        gameDiv.style.display = 'block';
+        if (callback) callback();
+      });
+    }
+
+    function startGame() {
+      currentRound = 1;
+      score = 0;
+      userChoice = null;
+      userInteracted = true;
+      resultDiv.innerHTML = '';
+      revealedCard.src = '';
+      cardContainer.classList.remove('flipped');
+      cardContainer.style.display = 'none';
+      choicesDiv.style.display = 'none';
+      drawBtn.style.display = 'none';
+      hitMessage.style.display = 'none';
+      restartBtn.style.display = 'none';
+      celebrationDiv.innerHTML = '';
+      celebrationDiv.style.display = 'none';
+      titleH1.style.display = 'block';
+      zenerImg.style.display = 'none';
+      showVideo('inicio.mp4', waitForDraw);
+    }
+
+    function waitForDraw() {
+      choicesDiv.style.display = 'none';
+      resultDiv.innerHTML = '';
+      hitMessage.style.display = 'none';
+      revealedCard.src = '';
+      cardContainer.classList.remove('flipped');
+      cardContainer.style.display = 'block';
+      drawBtn.textContent = `Draw card (Round ${currentRound})`;
+      drawBtn.disabled = false;
+      drawBtn.style.display = 'inline-block';
+
+      drawBtn.onmousedown = () => {
+        holdTimer = setTimeout(() => {
+          userInteracted = true;
+          drawBtn.disabled = true;
+          drawBtn.style.opacity = '0.6';
+          showVideo(`sacacartas${currentRound}.mp4`, () => {
+            drawBtn.style.display = 'none';
+            cardContainer.style.display = 'none';
+            showChoices();
+          });
+        }, 100);
+      };
+      drawBtn.onmouseup = drawBtn.onmouseleave = () => {
+        if (holdTimer) {
+          clearTimeout(holdTimer);
+          holdTimer = null;
+        }
+      };
+    }
+
+    function showChoices() {
+      choicesDiv.innerHTML = '';
+      cardContainer.classList.remove('flipped');
+      revealedCard.src = '';
+      cardContainer.style.display = 'block';
+      cards.forEach((card, i) => {
+        const img = document.createElement('img');
+        img.src = `img/${card}`;
+        img.alt = `Carta ${i + 1}`;
+        img.onclick = () => handleChoice(i);
+        choicesDiv.appendChild(img);
+      });
+      choicesDiv.style.display = 'flex';
+    }
+
+    function handleChoice(index) {
+      userChoice = index;
+      userInteracted = true;
+      choicesDiv.style.display = 'none';
+      cardContainer.style.display = 'block';
+      showVideo(`carta${index + 1}.mp4`, revealCard);
+    }
+
+    function revealCard() {
+      const randomIndex = Math.floor(Math.random() * cards.length);
+      revealedCard.src = `img/${cards[randomIndex]}`;
+      cardContainer.classList.add('flipped');
+
+      setTimeout(() => {
+        if (randomIndex === userChoice) {
+          score++;
+          hitMessage.style.display = 'block';
+          setTimeout(() => {
+            hitMessage.style.display = 'none';
+            currentRound <= totalRounds ? waitForDraw() : showResult();
+          }, 2000);
+        } else {
+          showVideo(`fallo${Math.floor(Math.random() * 4) + 1}.mp4`, () => {
+            currentRound <= totalRounds ? waitForDraw() : showResult();
+          });
+        }
+        currentRound++;
+      }, 1200);
+    }
+
+    function showResult() {
+      cardContainer.style.display = 'none';
+      choicesDiv.style.display = 'none';
+      drawBtn.style.display = 'none';
+      hitMessage.style.display = 'none';
+      titleH1.style.display = 'none';
+      zenerImg.style.display = 'block';
+      restartBtn.style.display = 'inline-block';
+
+      const messages = [
+       "This isn't your thing, your mind is closed",
+        "It's a start, keep practicing",
+        "That's a good number, but it can be improved",
+        "That's a very good amount of intuition",
+        "You have an exceptional mind, you could make money with this",
+        "Incredible, you have a prodigious mind"
+      ];
+      const message = messages[score] || "";
+      resultDiv.innerHTML = score === totalRounds
+        ? `<div id="winMessage">${message}</div>`
+        : `${message} (you got it right ${score} of ${totalRounds})`;
+      if (score === totalRounds) launchConfetti();
+    }
+
+    function launchConfetti() {
+      celebrationDiv.style.display = 'block';
+      for (let i = 0; i < 150; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.top = '-10px';
+        c.style.setProperty('--hue', Math.floor(Math.random() * 360));
+        c.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        c.style.transform = `rotate(${Math.random() * 360}deg)`;
+        celebrationDiv.appendChild(c);
+      }
+    }
+
+    startBtn.onclick = () => {
+      startScreen.style.display = 'none';
+      startGame();
+    };
+
+    restartBtn.onclick = () => {
+      startScreen.style.display = 'flex';
+      gameDiv.style.display = 'none';
+      videoContainer.style.display = 'none';
+      celebrationDiv.innerHTML = '';
+      celebrationDiv.style.display = 'none';
+      resultDiv.innerHTML = '';
+      zenerImg.style.display = 'none';
+      titleH1.style.display = 'block';
+    };
+
+    window.onload = () => {
+      startScreen.style.display = 'flex';
+      gameDiv.style.display = 'none';
+      videoContainer.style.display = 'none';
+    };
+  </script>
+  <center>
+	<a href="../pasatiempos.html">
+  <button>Back to games</button>
+</a>
+	</center>
+</body>
+</html>
