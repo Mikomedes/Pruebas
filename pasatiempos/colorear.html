@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<link rel="shortcut icon" href="../images/favicon.ico">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Galería de PDFs para colorear</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .pdf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .pdf-item {
+      background-color: #1e1e1e;
+      border-radius: 10px;
+      padding: 1rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pdf-item:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 10px #00ffcc44;
+    }
+
+    .pdf-thumb {
+      width: 100%;
+      height: 200px;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 0.8rem;
+      background-color: #2a2a2a;
+    }
+
+    .pdf-description {
+      font-size: 0.95rem;
+      color: #ccc;
+      margin-bottom: 0.5rem;
+    }
+
+    .pdf-link {
+      color: #00ffc8;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .pdf-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .pdf-thumb {
+        height: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Colorea a los Cazafantasmas</h1>
+  <center>
+  <p>Descarga e imprime.</p>
+</center>
+  <div class="pdf-grid">
+    <!-- PDF 1 -->
+    <div class="pdf-item">
+      <embed src="pdfs/005.pdf#toolbar=0&navpanes=0&scrollbar=0" class="pdf-thumb" type="application/pdf" />
+      <div class="pdf-description">Dibujos varios seleccionados por MondayMandala.com</div>
+      <a href="pdfs/005.pdf" target="_blank" class="pdf-link">Ver o descargar</a>
+    </div>
+
+    <!-- PDF 2 -->
+    <div class="pdf-item">
+      <embed src="pdfs/006.pdf#toolbar=0&navpanes=0&scrollbar=0" class="pdf-thumb" type="application/pdf" />
+      <div class="pdf-description">Varios dibujos de los muñecos de playmobil.</div>
+      <a href="pdfs/006.pdf" target="_blank" class="pdf-link">Ver o descargar</a>
+    </div>
+
+    <!-- Añade más PDFs repitiendo este bloque -->
+  </div>
+ <p></p>
+					<center
+					<p>&copy; 2025 - Ghostbusters United Espa&ntilde;a</p>
+					</center>
+</body>
+</html>
