@@ -17,7 +17,6 @@
     align-items: center;
     padding: 10px;
     margin: 0;
-    touch-action: none; /* evitar gestos táctiles por defecto */
   }
 
   h1 { text-align: center; font-size: 1.8em; }
@@ -34,6 +33,9 @@
 
   #grid { border-collapse: collapse; }
 
+  /* Importante para que en móvil lleguen los pointermove */
+  #grid, #grid td { touch-action: none; }
+
   #grid td {
     width: 8vw; height: 8vw;
     max-width: 40px; max-height: 40px;
@@ -44,12 +46,12 @@
     font-size: 4vw;
     color: white;
     user-select: none;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.15s ease;
   }
 
   td.highlight { background-color: rgba(255, 165, 0, 0.5); }
-  td.selected { background-color: orange; }
-  td.found { background-color: green; color: black; }
+  td.selected  { background-color: orange; }
+  td.found     { background-color: green; color: black; }
 
   ul { list-style: none; padding: 0; margin-top: 0; text-align: center; }
   li.found { text-decoration: line-through; color: #0f0; }
@@ -97,13 +99,14 @@ const words = ["FANTASMA", "PROTON", "ECTO", "MOQUETE", "ZUL", "PKE", "TRAMPA", 
 const gridSize = 12;
 let grid = [], foundWords = new Set(), timer = 0, interval;
 let selecting = false, startCell = null, selectedCells = [];
-const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+let activePointerId = null;
 
-if (isTouchDevice) {
-  document.addEventListener("touchmove", e => {
-    if (selecting) e.preventDefault();
-  }, { passive: false });
-}
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+// En táctil: evitar scroll mientras se arrastra
+document.addEventListener("touchmove", e => {
+  if (selecting) e.preventDefault();
+}, { passive: false });
 
 function initGame() {
   foundWords.clear();
@@ -124,6 +127,7 @@ function initGame() {
   drawWordList();
 }
 
+// 8 direcciones
 const directions = [
   [0, 1], [0, -1],
   [1, 0], [-1, 0],
@@ -150,8 +154,7 @@ function placeWords() {
 
 function canPlace(word, r, c, dir) {
   for (let i = 0; i < word.length; i++) {
-    let nr = r + i * dir[0];
-    let nc = c + i * dir[1];
+    let nr = r + i * dir[0], nc = c + i * dir[1];
     if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize) return false;
     if (grid[nr][nc] !== "" && grid[nr][nc] !== word[i]) return false;
   }
@@ -185,33 +188,54 @@ function drawGrid() {
   }
 
   if (isTouchDevice) {
+    // ---- MÓVIL/TABLET: pointerdown + pointermove (elementFromPoint) ----
     table.querySelectorAll("td").forEach(cell => {
       cell.addEventListener("pointerdown", e => {
+        if (e.target.tagName !== "TD") return;
         selecting = true;
+        activePointerId = e.pointerId;
         startCell = e.target;
         clearSelection();
         e.target.classList.add("highlight");
         selectedCells = [e.target];
-        e.target.setPointerCapture(e.pointerId);
+        e.target.setPointerCapture(e.pointerId); // capturamos el puntero
         e.preventDefault();
-      });
 
-      cell.addEventListener("pointerenter", e => {
-        if (!selecting) return;
-        clearHighlight();
-        selectedCells = getCellsInLine(startCell, e.target);
-        selectedCells.forEach(c => c.classList.add("highlight"));
-      });
-    });
+        // Seguimos el dedo con pointermove y mapeamos a la celda bajo el dedo
+        const onMove = (ev) => {
+          if (!selecting || ev.pointerId !== activePointerId) return;
+          // posición del dedo/ratón
+          const x = ev.clientX, y = ev.clientY;
+          let el = document.elementFromPoint(x, y);
+          if (!el) return;
+          if (el.tagName !== "TD") el = el.closest("#grid td");
+          if (!el) return;
 
-    document.addEventListener("pointerup", () => {
-      if (!selecting) return;
-      selecting = false;
-      validateSelection();
+          clearHighlight();
+          selectedCells = getCellsInLine(startCell, el);
+          selectedCells.forEach(c => c.classList.add("highlight"));
+        };
+
+        const onUp = (ev) => {
+          if (ev.pointerId !== activePointerId) return;
+          document.removeEventListener("pointermove", onMove);
+          document.removeEventListener("pointerup", onUp);
+          document.removeEventListener("pointercancel", onUp);
+          selecting = false;
+          activePointerId = null;
+          validateSelection();
+        };
+
+        document.addEventListener("pointermove", onMove, { passive: false });
+        document.addEventListener("pointerup", onUp, { passive: false });
+        document.addEventListener("pointercancel", onUp, { passive: false });
+      });
     });
   } else {
+    // ---- PC: pointerdown + pointerenter por celda (fluido con ratón) ----
     table.querySelectorAll("td").forEach(cell => {
       cell.addEventListener("pointerdown", e => {
+        if (e.target.tagName !== "TD") return;
         selecting = true;
         startCell = e.target;
         clearSelection();
@@ -220,10 +244,10 @@ function drawGrid() {
       });
 
       cell.addEventListener("pointerenter", e => {
-        if (!selecting) return;
+        if (!selecting || e.target.tagName !== "TD") return;
         clearSelection();
         selectedCells = getCellsInLine(startCell, e.target);
-        selectedCells.forEach(c => c.classList.add("selected"));
+        selectedCells.forEach(td => td.classList.add("selected"));
       });
     });
 
@@ -258,18 +282,20 @@ function validateSelection() {
 }
 
 function getCellsInLine(start, end) {
-  const r1 = parseInt(start.dataset.row);
-  const c1 = parseInt(start.dataset.col);
-  const r2 = parseInt(end.dataset.row);
-  const c2 = parseInt(end.dataset.col);
+  const r1 = +start.dataset.row, c1 = +start.dataset.col;
+  const r2 = +end.dataset.row,   c2 = +end.dataset.col;
   const dr = r2 - r1, dc = c2 - c1;
   const steps = Math.max(Math.abs(dr), Math.abs(dc));
   const dRow = dr === 0 ? 0 : dr / Math.abs(dr);
   const dCol = dc === 0 ? 0 : dc / Math.abs(dc);
+
+  // Solo líneas rectas: horizontales, verticales o diagonales
   if (!(dRow === 0 || dCol === 0 || Math.abs(dr) === Math.abs(dc))) return [];
+
   const cells = [];
   for (let i = 0; i <= steps; i++) {
-    const cell = document.querySelector(`td[data-row="${r1 + i * dRow}"][data-col="${c1 + i * dCol}"]`);
+    const rr = r1 + i * dRow, cc = c1 + i * dCol;
+    const cell = document.querySelector(`td[data-row="${rr}"][data-col="${cc}"]`);
     if (cell) cells.push(cell);
   }
   return cells;
